@@ -118,118 +118,133 @@
 
   </main>
 
-  <script>
-    // --- Tool 1: URL Shortener Logic ---
-    const shortenForm = document.getElementById('shortenForm');
-    const shortenBtn = document.getElementById('shortenBtn');
-    const longUrlInput = document.getElementById('longUrl');
-    const shortenResult = document.getElementById('shortenResult');
-    const shortUrlOutput = document.getElementById('shortUrlOutput');
-    const shortenError = document.getElementById('shortenError');
-    const qrShortContainer = document.getElementById('qrShort');
-    
-    let qrShortInstance = null;
+<script>
+  // --- Tool 1: URL Shortener Logic ---
+  const shortenForm = document.getElementById('shortenForm');
+  const shortenBtn = document.getElementById('shortenBtn');
+  const longUrlInput = document.getElementById('longUrl');
+  const shortenResult = document.getElementById('shortenResult');
+  const shortUrlOutput = document.getElementById('shortUrlOutput');
+  const shortenError = document.getElementById('shortenError');
+  const qrShortContainer = document.getElementById('qrShort');
+  
+  let qrShortInstance = null;
 
-    shortenForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const url = longUrlInput.value.trim();
-      if (!url) return;
+  shortenForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = longUrlInput.value.trim();
+    if (!url) return;
 
-      // Reset UI
-      shortenBtn.disabled = true;
-      shortenBtn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...`;
-      shortenResult.classList.add('hidden');
-      shortenError.classList.add('hidden');
-      qrShortContainer.innerHTML = '';
+    // Reset UI
+    shortenBtn.disabled = true;
+    shortenBtn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...`;
+    shortenResult.classList.add('hidden');
+    shortenError.classList.add('hidden');
+    qrShortContainer.innerHTML = '';
 
-      try {
-        // Using is.gd as it supports CORS and is 100% free
-        const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(url)}`);
-        const data = await response.json();
-
-        if (data.shorturl) {
-          shortUrlOutput.value = data.shorturl;
-          shortenResult.classList.remove('hidden');
-          
-          // Generate QR for short link
-          qrShortInstance = new QRCode(qrShortContainer, {
-            text: data.shorturl,
-            width: 120,
-            height: 120,
-            colorDark: "#1e293b",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        } else {
-          throw new Error(data.errormessage || "Invalid URL or API error.");
-        }
-      } catch (error) {
-        shortenError.textContent = error.message;
-        shortenError.classList.remove('hidden');
-      } finally {
-        shortenBtn.disabled = false;
-        shortenBtn.innerHTML = 'Shorten Link';
-      }
-    });
-
-    // Copy Button
-    document.getElementById('copyBtn').addEventListener('click', () => {
-      shortUrlOutput.select();
-      document.execCommand('copy');
-      const copyBtn = document.getElementById('copyBtn');
-      const originalHTML = copyBtn.innerHTML;
-      copyBtn.innerHTML = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
-      setTimeout(() => copyBtn.innerHTML = originalHTML, 2000);
-    });
-
-    // Download Short QR
-    document.getElementById('downloadShortQr').addEventListener('click', () => {
-      const canvas = qrShortContainer.querySelector('canvas');
-      if (canvas) {
-        const a = document.createElement('a');
-        a.href = canvas.toDataURL("image/png");
-        a.download = "short-link-qr.png";
-        a.click();
-      }
-    });
-
-
-    // --- Tool 2: Custom QR Logic ---
-    const qrForm = document.getElementById('qrForm');
-    const qrInput = document.getElementById('qrInput');
-    const qrResult = document.getElementById('qrResult');
-    const qrCustomContainer = document.getElementById('qrCustom');
-    
-    let qrCustomInstance = null;
-
-    qrForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const text = qrInput.value.trim();
-      if (!text) return;
-
-      qrCustomContainer.innerHTML = ''; // Clear previous
-      qrResult.classList.remove('hidden');
-
-      qrCustomInstance = new QRCode(qrCustomContainer, {
-        text: text,
-        width: 180,
-        height: 180,
-        colorDark: "#1e293b",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+    try {
+      // NEW: Using os8.me which supports CORS for browser requests
+      const response = await fetch('https://os8.me/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: url })
       });
-    });
 
-    // Download Custom QR
-    document.getElementById('downloadCustomQr').addEventListener('click', () => {
-      const canvas = qrCustomContainer.querySelector('canvas');
-      if (canvas) {
-        const a = document.createElement('a');
-        a.href = canvas.toDataURL("image/png");
-        a.download = "custom-qr-code.png";
-        a.click();
+      const data = await response.json();
+
+      // os8.me returns { status: 200, short_url: "..." }
+      if (data.status === 200 && data.short_url) {
+        shortUrlOutput.value = data.short_url;
+        shortenResult.classList.remove('hidden');
+        
+        // Generate QR for short link
+        qrShortInstance = new QRCode(qrShortContainer, {
+          text: data.short_url,
+          width: 120,
+          height: 120,
+          colorDark: "#1e293b",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } else {
+        throw new Error(data.message || "Invalid URL or API error.");
       }
+    } catch (error) {
+      // Provide a more helpful error message
+      let userMessage = "Could not shorten this link. ";
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        userMessage += "Please check your internet connection, or the shortener service might be temporarily down.";
+      } else {
+        userMessage += error.message;
+      }
+      shortenError.textContent = userMessage;
+      shortenError.classList.remove('hidden');
+    } finally {
+      shortenBtn.disabled = false;
+      shortenBtn.innerHTML = 'Shorten Link';
+    }
+  });
+
+  // Copy Button
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    shortUrlOutput.select();
+    document.execCommand('copy');
+    const copyBtn = document.getElementById('copyBtn');
+    const originalHTML = copyBtn.innerHTML;
+    copyBtn.innerHTML = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+    setTimeout(() => copyBtn.innerHTML = originalHTML, 2000);
+  });
+
+  // Download Short QR
+  document.getElementById('downloadShortQr').addEventListener('click', () => {
+    const canvas = qrShortContainer.querySelector('canvas');
+    if (canvas) {
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL("image/png");
+      a.download = "short-link-qr.png";
+      a.click();
+    }
+  });
+
+
+  // --- Tool 2: Custom QR Logic (No changes, this part already works) ---
+  const qrForm = document.getElementById('qrForm');
+  const qrInput = document.getElementById('qrInput');
+  const qrResult = document.getElementById('qrResult');
+  const qrCustomContainer = document.getElementById('qrCustom');
+  
+  let qrCustomInstance = null;
+
+  qrForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = qrInput.value.trim();
+    if (!text) return;
+
+    qrCustomContainer.innerHTML = '';
+    qrResult.classList.remove('hidden');
+
+    qrCustomInstance = new QRCode(qrCustomContainer, {
+      text: text,
+      width: 180,
+      height: 180,
+      colorDark: "#1e293b",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
     });
-  </script>
+  });
+
+  // Download Custom QR
+  document.getElementById('downloadCustomQr').addEventListener('click', () => {
+    const canvas = qrCustomContainer.querySelector('canvas');
+    if (canvas) {
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL("image/png");
+      a.download = "custom-qr-code.png";
+      a.click();
+    }
+  });
+</script>
 </body>
 </html>
