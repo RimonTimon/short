@@ -1,0 +1,63 @@
+:root { color-scheme: light; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 5.5rem;      /* keeps anchor targets clear of the sticky header */
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      background: #f8fafc;
+      color: #172033;
+      font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; height: auto; }
+
+    .hero-glow { background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,.12), transparent 62%); }
+    .soft-shadow { box-shadow: 0 16px 44px rgba(15, 23, 42, .07); }
+    @media (min-width: 640px) { .soft-shadow { box-shadow: 0 24px 70px rgba(15, 23, 42, .08); } }
+.spinner {
+      width: 18px; height: 18px; flex: 0 0 auto;
+      border: 2px solid currentColor; border-right-color: transparent;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { content: ""; }
+
+    /* Visible, high-contrast keyboard focus everywhere. */
+    :where(a, button, input, summary, [tabindex]):focus-visible {
+      outline: 2px solid #4338ca;
+      outline-offset: 3px;
+      border-radius: .6rem;
+    }
+
+    .skip-link {
+      position: absolute; left: 0; top: 0; transform: translateY(-200%);
+      z-index: 100; display: inline-flex; align-items: center;
+      min-height: 44px; padding: .625rem 1rem; margin: .5rem;
+      border-radius: .75rem; background: #4338ca; color: #fff;
+      font-size: .875rem; font-weight: 700; text-decoration: none;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+/* Responsive refinements */
+body { overflow-wrap: anywhere; }
+button, input, a { -webkit-tap-highlight-color: transparent; }
+input, button { font: inherit; }
+section, main, header, footer { min-width: 0; }
+@media (max-width: 359px) {
+  .hero-glow { padding-left: .75rem; padding-right: .75rem; }
+  #shortener { padding: .875rem; }
+}
+
